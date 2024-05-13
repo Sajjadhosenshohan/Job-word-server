@@ -9,7 +9,7 @@ const app = express()
 
 const corsOptions = {
     origin: [
-        // 'http://localhost:5173',
+        'http://localhost:5173',
         'http://localhost:5174',
     ],
     credentials: true,
@@ -38,6 +38,9 @@ async function run() {
     try {
 
         const assignmentCollection = client.db('JobWord').collection('allAssignment')
+        
+        const mySubmissionCollection = client.db('JobWord').collection('mySubmissionDb')
+
         // get assignment from create user
         app.post('/assignment', async (req, res) => {
             const assignment = req.body
@@ -51,6 +54,7 @@ async function run() {
             const result = await assignmentCollection.find().toArray()
             res.send(result)
         })
+        
 
 
         // delete one item
@@ -88,6 +92,49 @@ async function run() {
             const result = await assignmentCollection.updateOne(query, updateDoc, options)
             res.send(result)
         })
+
+        // Save a mySubmission data in db
+        app.post('/mySubmission', async (req, res) => {
+            const submitData = req.body
+            const result = await mySubmissionCollection.insertOne(submitData)
+            res.send(result)
+        })
+
+        // get by email
+        app.get('/myAssignment/:email', async (req, res) => {
+            const myEmail = req.params.email
+            const query = { email: (myEmail) }
+            const result = await mySubmissionCollection.find(query).toArray()
+            res.send(result)
+        })
+        // get by id for mark assignment
+        app.get('/markAssignment/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id)}
+            const result = await mySubmissionCollection.findOne(query)
+            res.send(result)
+        })
+
+        // get all assignment 
+        app.get('/allPending/:status', async (req, res) => {
+            const findByTitle = req.params.status;
+            const filter = {status: (findByTitle)}
+            const result = await mySubmissionCollection.find(filter).toArray()
+            res.send(result)
+        })
+
+        // update status
+       
+        app.patch('/statusUpdate/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const status = req.body
+            const updateDoc = {
+              $set: status,
+            }
+            const result = await mySubmissionCollection.updateOne(query, updateDoc)
+            res.send(result)
+          })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
