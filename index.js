@@ -1,8 +1,8 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
-// const jwt = require('jsonwebtoken')
-// const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const port = process.env.PORT || 8000
 const app = express()
@@ -13,12 +13,11 @@ const corsOptions = {
         'http://localhost:5174',
     ],
     credentials: true,
-    optionSuccessStatus: 200,
 }
 // middleware
 app.use(cors(corsOptions))
 app.use(express.json())
-// app.use(cookieParser())
+app.use(cookieParser())
 // yulo4fhTZ6Q2DSuQ
 // JobWord
 
@@ -33,13 +32,52 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+// middleware
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token
+    console.log("token in the middleware ", token)
 
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+
+    if (token) {
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+            if (err) {
+                console.log(err)
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
+            console.log(decoded)
+            req.user = decoded
+            next()
+        })
+    }
+}
 async function run() {
     try {
 
         const assignmentCollection = client.db('JobWord').collection('allAssignment')
-        
+
         const mySubmissionCollection = client.db('JobWord').collection('mySubmissionDb')
+
+        // jwt
+        //creating Token
+        app.post("/jwt", async (req, res) => {
+            const user = req.body;
+            console.log("user for token", user);
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '365d' });
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "none"
+            }).send({ success: true });
+        });
+
+        // Clear token on logout
+        app.get('/logout', (req, res) => {
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
 
         // get assignment from create user
         app.post('/assignment', async (req, res) => {
@@ -51,10 +89,11 @@ async function run() {
 
         // get all assignment 
         app.get('/allAssignment', async (req, res) => {
+            // console.log(" all token owner", req.user.email)
             const result = await assignmentCollection.find().toArray()
             res.send(result)
         })
-        
+
 
 
         // delete one item
@@ -107,10 +146,32 @@ async function run() {
             const result = await mySubmissionCollection.find(query).toArray()
             res.send(result)
         })
+
+        // // Save a mySubmission data in db
+        // app.post('/mySubmission/:email', async(req, res) => {
+        //     const submitData = req.params.email;
+        //     console.log(submitData)
+        //     const query = {email: (submitData)}
+        //     const result = await mySubmissionCollection.insertOne(query)
+        //     res.send(result)
+        // })
+
+        // get by email
+        // app.get('/myAssignment/:email', async (req, res) => {
+        //     const myEmail = req.params.email
+        //     console.log("token owner", myEmail)
+
+        //     // if (myEmail !== req?.user?.email) {
+        //     //     return res.status(403).send({ message: 'forbidden access' })
+        //     //   }
+        //     const query = { "examiner_email": myEmail }
+        //     const result = await mySubmissionCollection.find(query).toArray()
+        //     res.send(result)
+        // })
         // get by id for mark assignment
         app.get('/markAssignment/:id', async (req, res) => {
             const id = req.params.id
-            const query = { _id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await mySubmissionCollection.findOne(query)
             res.send(result)
         })
@@ -118,23 +179,36 @@ async function run() {
         // get all assignment 
         app.get('/allPending/:status', async (req, res) => {
             const findByTitle = req.params.status;
-            const filter = {status: (findByTitle)}
+            const filter = { status: (findByTitle) }
             const result = await mySubmissionCollection.find(filter).toArray()
             res.send(result)
         })
 
         // update status
-       
+
         app.patch('/statusUpdate/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const status = req.body
+            console.log(status)
             const updateDoc = {
-              $set: status,
+                $set: {
+                    assignment_title: status.assignment_title,
+                    assignment_level: status.assignment_level,
+                    marks: status.marks,
+                    description: status.description,
+                    due_date: status.due_date,
+                    thumbnail: status.thumbnail,
+                    status: status.status,
+                    pdfLink: status.pdfLink,
+                    notes: status.notes,
+                    giveMark: status.giveMark,
+                    feedback: status.feedback,
+                },
             }
             const result = await mySubmissionCollection.updateOne(query, updateDoc)
             res.send(result)
-          })
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
