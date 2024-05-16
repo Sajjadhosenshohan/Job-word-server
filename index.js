@@ -66,7 +66,7 @@ async function run() {
         app.post("/jwt", (req, res) => {
             const user = req.body;
             console.log("user for token", user);
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
 
 
             res.cookie('token', token, {
@@ -90,11 +90,6 @@ async function run() {
         // get assignment from create user
         app.post('/assignment', async (req, res) => {
             const assignment = req.body
-            // const myEmail = req.query.email
-            // console.log("token owner", myEmail)
-            // if (myEmail !== req?.user?.email) {
-            //     return res.status(403).send({ message: 'forbidden access' })
-            // }
 
             const result = await assignmentCollection.insertOne(assignment)
             res.send(result)
@@ -159,23 +154,28 @@ async function run() {
         })
 
         // get by email
-        app.get('/myAssignment/:email', verifyToken, async (req, res) => {
+        app.get('/myAssignment/:email',verifyToken, async (req, res) => {
 
-            console.log( req.cookies)
-            const userEmail = req.query.email;
-            console.log("user email vai", userEmail)
+            // const userEmail = req.query.email;
+            // console.log("user email vai", userEmail)
+
+            
+            const myEmail = req.params.email
+            console.log("token owner", myEmail)
 
             const tokenEmail = req?.user?.email
             console.log("token email vai", tokenEmail)
 
 
-            if (tokenEmail !== userEmail) {
+            if (myEmail !== tokenEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
 
 
-            const Email = req.params.email
-            const query = { email: (Email) }
+
+
+            
+            const query = { email: (myEmail) }
             const result = await mySubmissionCollection.find(query).toArray()
             res.send(result)
         })
@@ -190,12 +190,6 @@ async function run() {
 
         // get all assignment 
         app.get('/allPending/:status', async (req, res) => {
-
-            // const myEmail = req.query.email
-            // console.log("token owner", myEmail)
-            // if (myEmail !== req?.user?.email) {
-            //     return res.status(403).send({ message: 'forbidden access' })
-            // }
 
             const findByTitle = req.params.status;
             const filter = { status: (findByTitle) }
