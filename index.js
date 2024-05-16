@@ -11,8 +11,9 @@ const app = express()
 
 const corsOptions = {
     origin: [
-        "http://localhost:5173",
-        "http://localhost:5174",
+        // "http://localhost:5173",
+        // "http://localhost:5174",
+        "https://job-word.firebaseapp.com",
         "https://job-word.web.app"
     ],
     credentials: true,
@@ -25,7 +26,6 @@ app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ejfr6xk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -67,7 +67,6 @@ async function run() {
             const user = req.body;
             console.log("user for token", user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
-
 
             res.cookie('token', token, {
                 httpOnly: true,
@@ -151,7 +150,6 @@ async function run() {
             const result = await mySubmissionCollection.insertOne(submitData)
             res.send(result)
         })
-
         // get by email
         app.get('/myAssignment/:email',verifyToken, async (req, res) => {
 
@@ -161,7 +159,6 @@ async function run() {
 
             const tokenEmail = req?.user?.email
             console.log("token email vai", tokenEmail)
-
 
             if (myEmail !== tokenEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
@@ -178,7 +175,6 @@ async function run() {
             const result = await mySubmissionCollection.findOne(query)
             res.send(result)
         })
-
         // get all assignment 
         app.get('/allPending/:status', async (req, res) => {
 
@@ -188,7 +184,6 @@ async function run() {
             res.send(result)
         })
         // update status
-
         app.patch('/statusUpdate/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
