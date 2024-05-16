@@ -1,16 +1,19 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
+
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
-const port = process.env.PORT || 8000
+const port = process.env.PORT || 5000
 const app = express()
 
 const corsOptions = {
     origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
+        "http://localhost:5173",
+        "http://localhost:5174",
+        // "https://job-word.web.app"
     ],
     credentials: true,
 }
@@ -18,8 +21,6 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
-// yulo4fhTZ6Q2DSuQ
-// JobWord
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ejfr6xk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -62,26 +63,38 @@ async function run() {
 
         // jwt
         //creating Token
-        app.post("/jwt", async (req, res) => {
+        app.post("/jwt", (req, res) => {
             const user = req.body;
             console.log("user for token", user);
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '365d' });
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
 
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: true,
-                sameSite: "none"
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
             }).send({ success: true });
         });
 
         // Clear token on logout
-        app.get('/logout', (req, res) => {
-            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        app.post('/logout', (req, res) => {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                maxAge: 0,
+            }).send({ success: true })
         })
+
 
         // get assignment from create user
         app.post('/assignment', async (req, res) => {
             const assignment = req.body
+            // const myEmail = req.query.email
+            // console.log("token owner", myEmail)
+            // if (myEmail !== req?.user?.email) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+            // }
 
             const result = await assignmentCollection.insertOne(assignment)
             res.send(result)
@@ -89,7 +102,7 @@ async function run() {
 
         // get all assignment 
         app.get('/allAssignment', async (req, res) => {
-            // console.log(" all token owner", req.user.email)
+
             const result = await assignmentCollection.find().toArray()
             res.send(result)
         })
@@ -106,6 +119,9 @@ async function run() {
 
         // get by id
         app.get('/updateData/:id', async (req, res) => {
+
+
+
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await assignmentCollection.findOne(query)
@@ -113,6 +129,9 @@ async function run() {
         })
         // update a job in db
         app.put('/myUpdate/:id', async (req, res) => {
+
+
+
             const id = req.params.id
             const updateData = req.body
             const query = { _id: new ObjectId(id) }
@@ -140,34 +159,27 @@ async function run() {
         })
 
         // get by email
-        app.get('/myAssignment/:email', async (req, res) => {
-            const myEmail = req.params.email
-            const query = { email: (myEmail) }
+        app.get('/myAssignment/:email', verifyToken, async (req, res) => {
+
+            console.log( req.cookies)
+            const userEmail = req.query.email;
+            console.log("user email vai", userEmail)
+
+            const tokenEmail = req?.user?.email
+            console.log("token email vai", tokenEmail)
+
+
+            if (tokenEmail !== userEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+
+            const Email = req.params.email
+            const query = { email: (Email) }
             const result = await mySubmissionCollection.find(query).toArray()
             res.send(result)
         })
 
-        // // Save a mySubmission data in db
-        // app.post('/mySubmission/:email', async(req, res) => {
-        //     const submitData = req.params.email;
-        //     console.log(submitData)
-        //     const query = {email: (submitData)}
-        //     const result = await mySubmissionCollection.insertOne(query)
-        //     res.send(result)
-        // })
-
-        // get by email
-        // app.get('/myAssignment/:email', async (req, res) => {
-        //     const myEmail = req.params.email
-        //     console.log("token owner", myEmail)
-
-        //     // if (myEmail !== req?.user?.email) {
-        //     //     return res.status(403).send({ message: 'forbidden access' })
-        //     //   }
-        //     const query = { "examiner_email": myEmail }
-        //     const result = await mySubmissionCollection.find(query).toArray()
-        //     res.send(result)
-        // })
         // get by id for mark assignment
         app.get('/markAssignment/:id', async (req, res) => {
             const id = req.params.id
@@ -178,6 +190,13 @@ async function run() {
 
         // get all assignment 
         app.get('/allPending/:status', async (req, res) => {
+
+            // const myEmail = req.query.email
+            // console.log("token owner", myEmail)
+            // if (myEmail !== req?.user?.email) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+            // }
+
             const findByTitle = req.params.status;
             const filter = { status: (findByTitle) }
             const result = await mySubmissionCollection.find(filter).toArray()
@@ -211,7 +230,7 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
 
