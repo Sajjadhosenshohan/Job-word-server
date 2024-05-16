@@ -166,11 +166,6 @@ async function run() {
             if (myEmail !== tokenEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-
-
-
-
-            
             const query = { email: (myEmail) }
             const result = await mySubmissionCollection.find(query).toArray()
             res.send(result)
@@ -192,7 +187,6 @@ async function run() {
             const result = await mySubmissionCollection.find(filter).toArray()
             res.send(result)
         })
-
         // update status
 
         app.patch('/statusUpdate/:id', async (req, res) => {
@@ -219,8 +213,7 @@ async function run() {
             res.send(result)
         })
 
-        // Send a ping to confirm a successful connection
-        // await client.db("admin").command({ ping: 1 });
+    
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
 
