@@ -13,7 +13,7 @@ const corsOptions = {
     origin: [
         "http://localhost:5173",
         "http://localhost:5174",
-        // "https://job-word.web.app"
+        "https://job-word.web.app"
     ],
     credentials: true,
 }
@@ -105,7 +105,8 @@ async function run() {
 
 
         // delete one item
-        app.delete("/delete/:id", async (req, res) => {
+        app.delete("/delete/:id",verifyToken, async (req, res) => {
+
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const result = await assignmentCollection.deleteOne(query)
@@ -124,8 +125,6 @@ async function run() {
         })
         // update a job in db
         app.put('/myUpdate/:id', async (req, res) => {
-
-
 
             const id = req.params.id
             const updateData = req.body
@@ -156,10 +155,7 @@ async function run() {
         // get by email
         app.get('/myAssignment/:email',verifyToken, async (req, res) => {
 
-            // const userEmail = req.query.email;
-            // console.log("user email vai", userEmail)
-
-            
+    
             const myEmail = req.params.email
             console.log("token owner", myEmail)
 
