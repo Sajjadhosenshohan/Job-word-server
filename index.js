@@ -44,7 +44,7 @@ const verifyToken = (req, res, next) => {
 
     if (token) {
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-            if (err) {
+            if (err){
                 console.log(err)
                 return res.status(401).send({ message: 'unauthorized access' })
             }
@@ -105,7 +105,7 @@ async function run() {
 
 
         // delete one item
-        app.delete("/delete/:id",verifyToken, async (req, res) => {
+        app.delete("/delete/:id",async (req, res) => {
 
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
