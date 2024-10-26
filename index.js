@@ -11,8 +11,7 @@ const app = express()
 
 const corsOptions = {
     origin: [
-        // "http://localhost:5173",
-        // "http://localhost:5174",
+        "http://localhost:5173",
         "https://job-word.firebaseapp.com",
         "https://job-word.web.app"
     ],
@@ -89,7 +88,6 @@ async function run() {
         // get assignment from create user
         app.post('/assignment', async (req, res) => {
             const assignment = req.body
-
             const result = await assignmentCollection.insertOne(assignment)
             res.send(result)
         })
@@ -97,7 +95,12 @@ async function run() {
         // get all assignment 
         app.get('/allAssignment', async (req, res) => {
 
-            const result = await assignmentCollection.find().toArray()
+            const filter = req.query;
+            console.log(filter)
+            const query = {
+                assignment_title: {"$regex": filter.search, $options: "i"}
+            }
+            const result = await assignmentCollection.find(query).toArray()
             res.send(result)
         })
 
@@ -222,3 +225,4 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => console.log(`Server running on port ${port}`))
+// https://job-word-server.vercel.app
