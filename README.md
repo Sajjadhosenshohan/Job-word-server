@@ -2,7 +2,7 @@
 
 ## 🌐 Live Link: [https://job-word.web.app](https://job-word.web.app)
 
-## 🗂️ Server Side Repository: [https://github.com/Sajjadhosenshohan/Job-word-server](https://github.com/Sajjadhosenshohan/Job-word-server)
+## 🗂️ Client Side Repository: [https://github.com/Sajjadhosenshohan/Job-word-client](https://github.com/Sajjadhosenshohan/Job-word-client)
 
 ---
 
