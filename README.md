@@ -38,7 +38,7 @@ The **JobWord** project is a web application designed for online group study, wh
 ## ⚙️ Installation Guide
 To set up **Jobword** on your local machine, follow these steps:
 
-### Step 1: Clone the Client Repository
+### Step 1: Clone the server Repository
 ```bash
 git clone https://github.com/Sajjadhosenshohan/Job-word-server
 ```
@@ -60,9 +60,11 @@ nodemon index.js
 
 ## 🌍 Environment Variables
 
-- `BASE_URL` = "https://job-word-server.vercel.app"
+- `CLIENT_URL` = "http://localhost:5173"
 
 - `PORT` = your_own_server_port
+  
+-  `ACCESS_TOKEN_SECRET` = your_token_secret
 
 - `MONGODB_URI` = "mongodb+srv://:@cluster0.jzvet.mongodb.net/?retryWrites=true&w=majority"
 
@@ -80,6 +82,4 @@ nodemon index.js
 
 If you have any feedback, please reach out to us at mdshohansajjad@gmail.com
 
-
-For client-side setup and instructions, please refer to the : 👉 [Jobword client repository](https://github.com/Sajjadhosenshohan/Job-word-client)
 
